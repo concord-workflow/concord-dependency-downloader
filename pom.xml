@@ -1,147 +1,181 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <groupId>dev.ybrig.concord</groupId>
-    <artifactId>dependency-downloader-maven-plugin</artifactId>
+  <groupId>dev.ybrig.concord</groupId>
+  <artifactId>dependency-downloader-maven-plugin</artifactId>
 
-    <version>0.0.5-SNAPSHOT</version>
-    <packaging>maven-plugin</packaging>
+  <version>0.0.5-SNAPSHOT</version>
+  <packaging>maven-plugin</packaging>
 
-    <name>Concord Dependency Plugins downloader</name>
-    <description>Downloads concord plugins dependencies and store it to local</description>
+  <name>Concord Dependency Plugins downloader</name>
+  <description>Downloads concord plugins dependencies and store it to local</description>
 
+  <url>https://github.com/concord-workflow/concord-dependency-downloader</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>team</id>
+      <name>Concord Development Team</name>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <scm>
+    <developerConnection>scm:git:https://github.com/concord-workflow/concord-dependency-downloader.git</developerConnection>
+    <tag>HEAD</tag>
     <url>https://github.com/concord-workflow/concord-dependency-downloader</url>
+  </scm>
 
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 
-    <developers>
-        <developer>
-            <id>team</id>
-            <name>Concord Development Team</name>
-            <roles>
-                <role>Project Lead</role>
-            </roles>
-        </developer>
-    </developers>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <scm>
-        <developerConnection>scm:git:https://github.com/concord-workflow/concord-dependency-downloader.git
-        </developerConnection>
-        <tag>HEAD</tag>
-        <url>https://github.com/concord-workflow/concord-dependency-downloader</url>
-    </scm>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
+    <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <concord.version>2.11.0</concord.version>
+    <maven.resolver.version>1.9.20</maven.resolver.version>
+  </properties>
 
-        <maven.compiler.release>17</maven.compiler.release>
-        <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
-        <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>3.9.6</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.9.0</version>
+      <scope>provided</scope>
+    </dependency>
 
-        <concord.version>2.11.0</concord.version>
-        <maven.resolver.version>1.9.20</maven.resolver.version>
-    </properties>
+    <dependency>
+      <groupId>com.walmartlabs.concord</groupId>
+      <artifactId>concord-dependency-manager</artifactId>
+      <version>${concord.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.takari.bpm</groupId>
+          <artifactId>bpm-engine-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-resolver-provider</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model-builder</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>3.9.6</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugin-tools</groupId>
-            <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.9.0</version>
-            <scope>provided</scope>
-        </dependency>
+    <!-- Aether & Co -->
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
+      <version>${maven.resolver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-util</artifactId>
+      <version>${maven.resolver.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-resolver-provider</artifactId>
+      <version>3.8.4</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-dependency-manager</artifactId>
-            <version>${concord.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.takari.bpm</groupId>
-                    <artifactId>bpm-engine-impl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-resolver-provider</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-model-builder</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <version>3.4.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>default</id>
+            <goals>
+              <goal>analyze-only</goal>
+              <goal>analyze-duplicate</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <ignoreNonCompile>true</ignoreNonCompile>
+              <failOnWarning>true</failOnWarning>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <localCheckout>false</localCheckout>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <goals>install</goals>
+          <tagNameFormat>@{project.version}</tagNameFormat>
+          <arguments>-DskipTests</arguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
-        <!-- Aether & Co -->
-        <dependency>
-            <groupId>org.apache.maven.resolver</groupId>
-            <artifactId>maven-resolver-api</artifactId>
-            <version>${maven.resolver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.resolver</groupId>
-            <artifactId>maven-resolver-util</artifactId>
-            <version>${maven.resolver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-resolver-provider</artifactId>
-            <version>3.8.4</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
+  <profiles>
+    <profile>
+      <id>sign</id>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>com.github.ekryd.sortpom</groupId>
-                <artifactId>sortpom-maven-plugin</artifactId>
-                <version>3.4.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <id>default</id>
-                        <goals>
-                            <goal>analyze-only</goal>
-                            <goal>analyze-duplicate</goal>
-                        </goals>
-                        <phase>verify</phase>
-                        <configuration>
-                            <ignoreNonCompile>true</ignoreNonCompile>
-                            <failOnWarning>true</failOnWarning>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
-                <configuration>
-                    <localCheckout>false</localCheckout>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <goals>install</goals>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
-                    <arguments>-DskipTests</arguments>
-                </configuration>
-            </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <phase>verify</phase>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </build>
+      </build>
+    </profile>
+  </profiles>
 </project>
