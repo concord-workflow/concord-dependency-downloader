@@ -74,7 +74,6 @@ public class DependencyManager {
                 .toList());
 
         return result;
-
     }
 
     private Collection<Artifact> resolveMavenSingleDependencies(Collection<MavenDependency> deps, ProgressNotifier progressNotifier) throws IOException {

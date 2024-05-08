@@ -36,6 +36,9 @@ import java.util.List;
 @Mojo(name = "download", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
 public class DependencyDownloaderMojo extends AbstractMojo {
 
+    @Parameter(property = "skip", defaultValue = "false")
+    private boolean skip;
+
     @Parameter(property = "plugins", required = true)
     List<String> plugins;
 
@@ -43,15 +46,19 @@ public class DependencyDownloaderMojo extends AbstractMojo {
     String downloadedFilesPath;
 
     public void execute() throws MojoExecutionException {
-        System.out.println(plugins);
-        System.out.println(downloadedFilesPath);
+        if (skip) {
+            getLog().info("Skipping plugin execution as per configuration");
+            return;
+        }
+
+        getLog().info("Downloading dependencies for plugins:");
+        plugins.forEach(p -> getLog().info(p));
+
         try {
             Path tmpDir = Files.createTempDirectory("test");
             DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
 
-            Collection<DependencyEntity> paths = m.resolve(plugins.stream().map(DependencyDownloaderMojo::toURI).toList(), new ArtifactSaver(Paths.get(downloadedFilesPath)));
-
-            System.out.println(paths);
+            m.resolve(plugins.stream().map(DependencyDownloaderMojo::toURI).toList(), new ArtifactSaver(Paths.get(downloadedFilesPath)));
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
