@@ -6,7 +6,7 @@
   <groupId>dev.ybrig.concord</groupId>
   <artifactId>dependency-downloader-maven-plugin</artifactId>
 
-  <version>0.0.7-SNAPSHOT</version>
+  <version>0.0.7</version>
   <packaging>maven-plugin</packaging>
 
   <name>Concord Dependency Plugins downloader</name>
@@ -34,7 +34,7 @@
 
   <scm>
     <developerConnection>scm:git:https://github.com/concord-workflow/concord-dependency-downloader.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>0.0.7</tag>
     <url>https://github.com/concord-workflow/concord-dependency-downloader</url>
   </scm>
 
