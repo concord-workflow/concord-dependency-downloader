@@ -18,7 +18,6 @@ package dev.ybrig.concord.dependencydownloader;
 
 import com.walmartlabs.concord.dependencymanager.DependencyEntity;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
-import com.walmartlabs.concord.dependencymanager.ProgressListener;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
