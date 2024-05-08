@@ -39,6 +39,9 @@ public class DependencyDownloaderMojo extends AbstractMojo {
     @Parameter(property = "skip", defaultValue = "false")
     private boolean skip;
 
+    @Parameter(property = "debug", defaultValue = "false")
+    private boolean debug;
+
     @Parameter(property = "plugins", required = true)
     List<String> plugins;
 
@@ -58,10 +61,29 @@ public class DependencyDownloaderMojo extends AbstractMojo {
             Path tmpDir = Files.createTempDirectory("test");
             DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
 
-            m.resolve(plugins.stream().map(DependencyDownloaderMojo::toURI).toList(), new ArtifactSaver(Paths.get(downloadedFilesPath)));
+            List<URI> releasePlugins = plugins.stream()
+                    .filter(p -> !p.endsWith("-SNAPSHOT"))
+                    .map(DependencyDownloaderMojo::toURI).toList();
+
+            Collection<DependencyEntity> releasePaths = m.resolve(releasePlugins, new ArtifactSaver(Paths.get(downloadedFilesPath)));
+
+            List<URI> snapshotPlugins = plugins.stream()
+                    .filter(p -> p.endsWith("-SNAPSHOT"))
+                    .map(DependencyDownloaderMojo::toURI).toList();
+            Collection<DependencyEntity> snapshotPaths = m.resolve(snapshotPlugins, new ArtifactSaver(Paths.get(downloadedFilesPath)));
+
+            if (debug) {
+                releasePaths.forEach(p -> getLog().info("  " + p.getPath()));
+                snapshotPaths.forEach(p -> getLog().info("  " + p.getPath()));
+            }
+
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    private static void resolve() {
+
     }
 
     private static class ArtifactSaver implements ProgressListener {
