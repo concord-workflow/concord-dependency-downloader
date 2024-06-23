@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Collection;
 import java.util.List;
 
 @Mojo(name = "download", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
@@ -61,29 +60,15 @@ public class DependencyDownloaderMojo extends AbstractMojo {
             Path tmpDir = Files.createTempDirectory("test");
             DependencyManager m = new DependencyManager(DependencyManagerConfiguration.of(tmpDir));
 
-            List<URI> releasePlugins = plugins.stream()
-                    .filter(p -> !p.endsWith("-SNAPSHOT"))
-                    .map(DependencyDownloaderMojo::toURI).toList();
+            for (String p : plugins) {
+                URI uri = toURI(p);
 
-            Collection<DependencyEntity> releasePaths = m.resolve(releasePlugins, new ArtifactSaver(Paths.get(downloadedFilesPath)));
-
-            List<URI> snapshotPlugins = plugins.stream()
-                    .filter(p -> p.endsWith("-SNAPSHOT"))
-                    .map(DependencyDownloaderMojo::toURI).toList();
-            Collection<DependencyEntity> snapshotPaths = m.resolve(snapshotPlugins, new ArtifactSaver(Paths.get(downloadedFilesPath)));
-
-            if (debug) {
-                releasePaths.forEach(p -> getLog().info("  " + p.getPath()));
-                snapshotPaths.forEach(p -> getLog().info("  " + p.getPath()));
+                m.resolve(List.of(uri), new ArtifactSaver(Paths.get(downloadedFilesPath)));
             }
 
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-    }
-
-    private static void resolve() {
-
     }
 
     private static class ArtifactSaver implements ProgressListener {
