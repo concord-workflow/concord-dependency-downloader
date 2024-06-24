@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collection;
 import java.util.List;
 
 @Mojo(name = "download", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
@@ -63,7 +64,8 @@ public class DependencyDownloaderMojo extends AbstractMojo {
             for (String p : plugins) {
                 URI uri = toURI(p);
 
-                m.resolve(List.of(uri), new ArtifactSaver(Paths.get(downloadedFilesPath)));
+                Collection<DependencyEntity> result = m.resolve(List.of(uri), new ArtifactSaver(Paths.get(downloadedFilesPath)));
+                result.forEach(r -> System.out.println(r));
             }
 
         } catch (IOException e) {

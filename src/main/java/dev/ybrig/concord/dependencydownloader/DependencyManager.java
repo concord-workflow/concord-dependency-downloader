@@ -5,7 +5,11 @@ import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.*;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.artifact.DefaultArtifactType;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.Proxy;
@@ -14,10 +18,19 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.util.artifact.DefaultArtifactTypeRegistry;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
 
+import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
+import org.eclipse.aether.util.graph.transformer.*;
+import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -130,7 +143,7 @@ public class DependencyManager {
     }
 
     private DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system, ProgressNotifier progressNotifier) {
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        DefaultRepositorySystemSession session = newSession();
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         session.setIgnoreArtifactDescriptorRepositories(strictRepositories);
 
@@ -141,11 +154,6 @@ public class DependencyManager {
             public void transferFailed(TransferEvent event) {
                 progressNotifier.transferFailed(event);
             }
-
-//            @Override
-//            public void transferSucceeded(TransferEvent event) {
-//                System.out.println("TRANSFER OK: " + event.getResource().getFile());
-//            }
         });
 
         session.setRepositoryListener(new AbstractRepositoryListener() {
@@ -327,5 +335,60 @@ public class DependencyManager {
 
             listener.onDependencyResolved(toDependency(event.getArtifact()));
         }
+    }
+
+
+    public static DefaultRepositorySystemSession newSession()
+    {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+
+        DependencyTraverser depTraverser = new FatArtifactTraverser();
+        session.setDependencyTraverser( depTraverser );
+
+        org.eclipse.aether.collection.DependencyManager depManager = new ClassicDependencyManager();
+        session.setDependencyManager( depManager );
+
+        DependencySelector depFilter =
+                new AndDependencySelector( new ScopeDependencySelector( "test", "provided" ),
+                        new OptionalDependencySelector(), new ExclusionDependencySelector() );
+        session.setDependencySelector( depFilter );
+
+        DependencyGraphTransformer transformer =
+                new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(), new JavaScopeDeriver() );
+        transformer = new ChainedDependencyGraphTransformer( transformer, new JavaDependencyContextRefiner() );
+        session.setDependencyGraphTransformer( transformer );
+
+        DefaultArtifactTypeRegistry stereotypes = new DefaultArtifactTypeRegistry();
+        stereotypes.add( new DefaultArtifactType( "pom" ) );
+        stereotypes.add( new DefaultArtifactType( "maven-plugin", "jar", "", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "jar", "jar", "", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "ejb", "jar", "", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "ejb-client", "jar", "client", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "test-jar", "jar", "tests", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "javadoc", "jar", "javadoc", "java" ) );
+        stereotypes.add( new DefaultArtifactType( "java-source", "jar", "sources", "java", false, false ) );
+        stereotypes.add( new DefaultArtifactType( "war", "war", "", "java", false, true ) );
+        stereotypes.add( new DefaultArtifactType( "ear", "ear", "", "java", false, true ) );
+        stereotypes.add( new DefaultArtifactType( "rar", "rar", "", "java", false, true ) );
+        stereotypes.add( new DefaultArtifactType( "par", "par", "", "java", false, true ) );
+        session.setArtifactTypeRegistry( stereotypes );
+
+        session.setArtifactDescriptorPolicy( new SimpleArtifactDescriptorPolicy( true, true ) );
+
+        final Properties systemProperties = new Properties();
+
+        // MNG-5670 guard against ConcurrentModificationException
+        // MNG-6053 guard against key without value
+        Properties sysProp = System.getProperties();
+        synchronized ( sysProp )
+        {
+            systemProperties.putAll( sysProp );
+        }
+
+        session.setSystemProperties( systemProperties );
+        session.setConfigProperties( systemProperties );
+
+        return session;
     }
 }
