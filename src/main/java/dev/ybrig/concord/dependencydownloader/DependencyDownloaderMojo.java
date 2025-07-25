@@ -26,6 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +49,9 @@ public class DependencyDownloaderMojo extends AbstractMojo {
     @Parameter(property = "downloadedFilesPath", required = true)
     String downloadedFilesPath;
 
+    @Parameter(property = "outputPluginsListFile")
+    String outputPluginsListFile;
+
     public void execute() throws MojoExecutionException {
         if (skip) {
             getLog().info("Skipping plugin execution as per configuration");
@@ -65,9 +69,15 @@ public class DependencyDownloaderMojo extends AbstractMojo {
                 URI uri = toURI(p);
 
                 Collection<DependencyEntity> result = m.resolve(List.of(uri), new ArtifactSaver(Paths.get(downloadedFilesPath)));
-                result.forEach(r -> System.out.println(r));
+                result.forEach(System.out::println);
             }
 
+            if (outputPluginsListFile != null) {
+                Path outFile = Paths.get(outputPluginsListFile);
+                Files.createDirectories(outFile.getParent());
+                Files.write(outFile, plugins, StandardCharsets.UTF_8);
+                getLog().info("Plugin list written to: " + outFile);
+            }
         } catch (IOException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
